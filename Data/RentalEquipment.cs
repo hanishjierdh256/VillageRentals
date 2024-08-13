@@ -8,7 +8,7 @@ namespace VillageRentals.Data
 {
     public class RentalEquipment
     {
-        // Private fields
+        // Private field
         private int rentalNumber;
         private int equipmentId;
         private DateTime rentalDate;
