@@ -1,0 +1,92 @@
+﻿@page "/displayEquipments"
+@using VillageRentals.Data
+@using Microsoft.Data.SqlClient;
+
+<h1>Display Equipments</h1>
+
+<button class="btn btn-primary btn-lg" @onclick="LoadEquipment">Load Equipment</button>
+
+@if (equipmentList != null && equipmentList.Any())
+{
+    <br />
+    <br />
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Equipment ID</th>
+                <th scope="col">Category</th>
+                <th scope="col">Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Daily Rental Cost</th>
+                <th scope="col">Availability Status</th>
+                <th scope="col">Sellability</th>
+                <th scope="col">Sell Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var equipment in equipmentList)
+            {
+                <tr>
+                    <td>@equipment.EquipmentId</td>
+                    <td>@equipment.Category</td>
+                    <td>@equipment.Name</td>
+                    <td>@equipment.Description</td>
+                    <td>@equipment.DailyRentalCost</td>
+                    <td>@equipment.AvailabilityStatus</td>
+                    <td>@(equipment.Sellability)</td>
+                    <td>@(equipment.SellPrice)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (equipmentList != null && !equipmentList.Any())
+{
+    <p>No equipment available.</p>
+}
+
+
+@code {
+    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    List<Equipment> equipmentList;
+
+    public void LoadEquipment()
+    {
+        equipmentList = new List<Equipment>();
+
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))
+        {
+            connect.Open();
+
+            string sql = "SELECT EquipmentId, Category, Name, Description, DailyRentalCost, AvailabilityStatus, Sellability, SellPrice FROM Equipment";
+
+            using (SqlCommand cmd = new SqlCommand(sql, connect))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int equipmentId = reader.GetInt32(0);
+                        int category = reader.GetInt32(1);
+                        string name = reader.GetString(2);
+                        string description = reader.GetString(3);
+                        double dailyRentalCost = reader.GetDouble(4);
+                        string availabilityStatus = reader.GetString(5);
+                        bool sellability = reader.GetBoolean(6);
+                        double? sellPrice;
+                        if (reader.IsDBNull(7))
+                        {
+                            sellPrice = null;
+                        }
+                        else
+                        {
+                            sellPrice = reader.GetDouble(7);
+                        }
+                        Equipment equipment = new Equipment(equipmentId, category, name, description, dailyRentalCost, availabilityStatus, sellability, sellPrice);
+                        equipmentList.Add(equipment);
+                    }
+                }
+            }
+        }
+    }
+}

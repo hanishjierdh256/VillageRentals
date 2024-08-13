@@ -1,0 +1,189 @@
+﻿@page "/"
+@using VillageRentals.Data
+@using Microsoft.Data.SqlClient;
+
+<h1>Add Equipment</h1>
+<form>
+    <div class="form-group">
+        <label for="formGroupExampleInput">Equipment Id</label>
+        <input type="text" class="form-control" id="equipmentId1" placeholder="E.g 107" @bind="equipmentId1">
+    </div>
+
+    <div class="form-group">
+        <label for="exampleFormControlSelect1">Category</label>
+        <select class="form-control" id="category" @bind="category">
+            <option>Select a Category</option>
+            <option value="10">10 - Power Tools</option>
+            <option value="20">20 - Yard Equipment</option>
+            <option value="30">30 - Compressors</option>
+            <option value="40">40 - Generators</option>
+            <option value="50">50 - Air Tools</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="formGroupExampleInput">Name</label>
+        <input type="text" class="form-control" id="name" placeholder="Equipment Name" @bind="name">
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Description</label>
+        <textarea class="form-control" id="description" rows="3" @bind="description"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="formGroupExampleInput">Daily Rental Cost</label>
+        <input type="text" class="form-control" id="dailyRentalCost" placeholder="E.g. $45.99" @bind="dailyRentalCost">
+    </div>
+    <br />
+    <a href="#" class="btn btn-primary btn-lg active" role="button" aria-pressed="true" @onclick=AddEquipment>Add Equipment</a>
+
+</form>
+<br />
+<h1>Delete Equipment</h1>
+<form>
+    <div class="form-group">
+        <label for="formGroupExampleInput">Equipment Id</label>
+        <input type="text" class="form-control" id="equipmentId2" placeholder="Equipment Id" @bind="equipmentId2">
+    </div>
+</form>
+<br />
+<a href="#" class="btn btn-primary btn-lg active" role="button" aria-pressed="true" @onclick=DeleteEquipment>Remove Equipment</a>
+<br />
+
+@code {
+    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    public Equipment equipment = new Equipment();
+    string equipmentId1;
+    string category;
+    string name;
+    string description;
+    string dailyRentalCost;
+    string equipmentId2;
+
+    public async Task AddEquipment()
+    {
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))  // Establish a database connection
+        {
+            connect.Open();  // Open the connection
+
+            try
+            {
+                Validation();  // Validate the user input
+
+                string sql = "INSERT INTO Equipment (EquipmentId, Category, Name, Description, DailyRentalCost, AvailabilityStatus, Sellability, SellPrice) " +
+                         "VALUES (@EquipmentId1, @Category, @Name, @Description, @DailyRentalCost, @AvailabilityStatus, @Sellability, @SellPrice)";
+
+                using (SqlCommand cmd = new SqlCommand(sql, connect))  // Create a SQL command
+                {
+                    // Add parameters to the SQL command
+                    cmd.Parameters.AddWithValue("@EquipmentId1", int.Parse(equipmentId1));
+                    cmd.Parameters.AddWithValue("@Category", int.Parse(category));
+                    cmd.Parameters.AddWithValue("@Name", name);
+                    cmd.Parameters.AddWithValue("@Description", description);
+                    cmd.Parameters.AddWithValue("@DailyRentalCost", double.Parse(dailyRentalCost));
+                    cmd.Parameters.AddWithValue("@AvailabilityStatus", "Available");
+                    cmd.Parameters.AddWithValue("@Sellability", true);
+                    cmd.Parameters.AddWithValue("@SellPrice", DBNull.Value);
+
+                    cmd.ExecuteNonQuery();  // Execute the command to insert the book
+                    Application.Current.MainPage.DisplayAlert("Success", "Equipment added successfully.", "OK");  // Display success message
+                }
+            }
+            catch (Exception e)  // Handle any errors that occur during the process
+            {
+                Application.Current.MainPage.DisplayAlert("Error", e.Message, "OK");  // Display error message
+            }
+        }
+    }
+
+    public void DeleteEquipment()
+    {
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))  // Establish a database connection
+        {
+            connect.Open();  // Open the connection
+            try
+            {
+                ValidateEquipmentId(equipmentId2);  // Validate the Equipment ID
+
+                // SQL query to delete the equipment from the database
+                string sql = "DELETE FROM Equipment WHERE EquipmentId = @EquipmentId";
+                using (SqlCommand cmd = new SqlCommand(sql, connect))  // Create a SQL command
+                {
+                    cmd.Parameters.AddWithValue("@EquipmentId", int.Parse(equipmentId2));  // Add the EquipmentId parameter to the query
+
+                    int row = cmd.ExecuteNonQuery();  // Execute the command to delete the equipment
+                    Application.Current.MainPage.DisplayAlert("Success", $"{row} equipment(s) removed successfully.", "OK");  // Display success message
+                }
+            }
+            catch (Exception e)  // Handle any errors that occur during the process
+            {
+                Application.Current.MainPage.DisplayAlert("Error", e.Message, "OK");  // Display error message
+            }
+        }
+    }
+
+    public void ValidateEquipmentId(string equipmentId)
+    {
+        // Check if the equipmentId can be parsed as an integer
+        if (!int.TryParse(equipmentId, out int parsedEquipmentId))
+        {
+            throw new ArgumentException("Equipment ID must be a valid integer.");
+        }
+
+        // Check if the equipmentId exists in the database
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))
+        {
+            connect.Open();
+
+            string sql = "SELECT COUNT(1) FROM Equipment WHERE EquipmentId = @EquipmentId";
+            using (SqlCommand cmd = new SqlCommand(sql, connect))
+            {
+                cmd.Parameters.AddWithValue("@EquipmentId", parsedEquipmentId);
+
+                int count = (int)cmd.ExecuteScalar();
+
+                if (count == 0)
+                {
+                    throw new ArgumentException("Equipment ID does not exist.");
+                }
+            }
+        }
+    }
+
+
+    public void Validation()
+    {
+        // Check if Equipment ID is a valid integer
+        if (!int.TryParse(equipmentId1, out _))
+        {
+            throw new ArgumentException("Equipment ID is invalid.");
+        }
+
+        // Check if Category is a valid integer
+        if (!int.TryParse(category, out _))
+        {
+            throw new ArgumentException("Category is invalid.");
+        }
+
+        // Check if Name is provided
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Name cannot be empty.");
+        }
+
+        // Check if Description is provided
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new ArgumentException("Description cannot be empty.");
+        }
+
+        // Check if Daily Rental Cost is a valid float
+        if (!float.TryParse(dailyRentalCost, out _))
+        {
+            throw new ArgumentException("Daily Rental Cost is invalid.");
+        }
+    }
+
+}
+

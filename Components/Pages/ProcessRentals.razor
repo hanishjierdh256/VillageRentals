@@ -1,0 +1,89 @@
+﻿@page "/processRental"
+@using VillageRentals.Data
+@using Microsoft.Data.SqlClient;
+
+<h1>Process Rental</h1>
+
+<form>
+    <div class="form-group">
+        <label for="rentalId">Rental ID</label>
+        <input type="text" class="form-control" id="rentalId" placeholder="Enter valid ID E.g. 1000" @bind="rentalId">
+    </div>
+
+    <div class="form-group">
+        <label for="equipmentId">Equipment ID</label>
+        <input type="text" class="form-control" id="equipmentId" placeholder="Enter valid ID E.g.501" @bind="equipmentId">
+    </div>
+
+    <div class="form-group">
+        <label for="rentalDate">Rental Date</label>
+        <input type="date" class="form-control" id="rentalDate" @bind="rentalDate">
+    </div>
+
+    <div class="form-group">
+        <label for="returnDate">Return Date</label>
+        <input type="date" class="form-control" id="returnDate" @bind="returnDate">
+    </div>
+
+    <div class="form-group">
+        <label for="cost">Cost</label>
+        <input type="text" class="form-control" id="cost" placeholder="Cost" @bind="cost">
+    </div>
+    <br />
+    <button type="button" class="btn btn-primary btn-lg" @onclick="ProcessRentalEquipment">Process Rental</button>
+</form>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    RentalEquipment rentalEquipment = new RentalEquipment();
+    string successMessage = null;
+    string errorMessage = null;
+    string rentalId;
+    string equipmentId;
+    DateTime rentalDate;
+    DateTime returnDate;
+    string cost;
+
+    public void ProcessRentalEquipment()
+    {
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))
+        {
+            connect.Open();
+
+            try
+            {
+                // SQL query to insert the rental equipment record into the database
+                string sql = "INSERT INTO RentalEquipment (RentalId, EquipmentId, RentalDate, ReturnDate, Cost) " +
+                             "VALUES (@RentalId, @EquipmentId, @RentalDate, @ReturnDate, @Cost)";
+
+                using (SqlCommand cmd = new SqlCommand(sql, connect))
+                {
+                    cmd.Parameters.AddWithValue("@RentalId", rentalId);
+                    cmd.Parameters.AddWithValue("@EquipmentId", equipmentId);
+                    cmd.Parameters.AddWithValue("@RentalDate", rentalDate);
+                    cmd.Parameters.AddWithValue("@ReturnDate", returnDate);
+                    cmd.Parameters.AddWithValue("@Cost", cost);
+
+                    cmd.ExecuteNonQuery();
+                    successMessage = "Rental equipment processed successfully!";
+                    errorMessage = null;
+                }
+            }
+            catch (Exception e)
+            {
+                errorMessage = $"An error occurred: {e.Message}";
+                successMessage = null;
+            }
+        }
+    }
+}
+

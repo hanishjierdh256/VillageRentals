@@ -1,0 +1,91 @@
+﻿@page "/displayClients"
+@using VillageRentals.Data
+@using Microsoft.Data.SqlClient;
+
+<h1>Display Clients</h1>
+
+<button class="btn btn-primary btn-lg" @onclick="LoadClients">Load Clients</button>
+
+@if (customerList != null && customerList.Any())
+{
+    <br />
+    <br />
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Client ID</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Phone Number</th>
+                <th scope="col">Email</th>
+                <th scope="col">Ban Status</th>
+                <th scope="col">Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in customerList)
+            {
+                <tr>
+                    <td>@client.CustomerId</td>
+                    <td>@client.FirstName</td>
+                    <td>@client.LastName</td>
+                    <td>@client.PhoneNumber</td>
+                    <td>@client.Email</td>
+                    <td>@(client.BanStatus ? "Banned" : "Not Banned")</td>
+                    <td>@(client.Notes)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (customerList != null && !customerList.Any())
+{
+    <p>No clients available.</p>
+}
+
+
+@code {
+    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    List<Customer> customerList;
+
+    public void LoadClients()
+    {
+        customerList = new List<Customer>();
+
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))
+        {
+            connect.Open();
+
+            string sql = "SELECT CustomerId, FirstName, LastName, PhoneNumber, Email, BanStatus, Notes FROM Customer";
+
+            using (SqlCommand cmd = new SqlCommand(sql, connect))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int customerId = reader.GetInt32(0);
+                        string firstName = reader.GetString(1);
+                        string lastName = reader.GetString(2);
+                        long phoneNumber = reader.GetInt64(3);
+                        string email = reader.GetString(4);
+                        bool banStatus = reader.GetBoolean(5);
+                        string notes;
+                        if (reader.IsDBNull(6))
+                        {
+                            notes = "N/A";
+                        }
+                        else
+                        {
+                            notes = reader.GetString(6);
+                        }
+
+                        Customer customer = new Customer(customerId, firstName, lastName, phoneNumber, email, banStatus, notes);
+                        customerList.Add(customer);
+                    }
+                }
+            }
+        }
+    }
+}
+

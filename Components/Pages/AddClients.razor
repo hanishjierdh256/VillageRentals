@@ -1,0 +1,126 @@
+﻿@page "/addClient"
+@using VillageRentals.Data
+@using Microsoft.Data.SqlClient;
+
+<h1>Add Client</h1>
+<form>
+    <div class="form-group">
+        <label for="clientId">Customer Id</label>
+        <input type="text" class="form-control" id="customerId" placeholder="E.g 001" @bind="customerId">
+    </div>
+
+    <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" class="form-control" id="firstName" placeholder="First Name" @bind="firstName">
+    </div>
+
+    <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" class="form-control" id="lastName" placeholder="Last Name" @bind="lastName">
+    </div>
+
+    <div class="form-group">
+        <label for="phoneNumber">Phone Number</label>
+        <input type="text" class="form-control" id="phoneNumber" placeholder="Phone Number" @bind="phoneNumber">
+    </div>
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" class="form-control" id="email" placeholder="Email Address" @bind="email">
+    </div>
+
+    <div class="form-group">
+        <label for="banStatus">Ban Status</label>
+        <select class="form-control" id="banStatus" @bind="banStatus">
+            <option value="false">Not Banned</option>
+            <option value="true">Banned</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea class="form-control" id="notes" rows="3" @bind="notes"></textarea>
+    </div>
+
+    <br />
+    <button type="button" class="btn btn-primary btn-lg active" @onclick="AddClient">Add Client</button>
+</form>
+
+
+@code {
+    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    string customerId;
+    string firstName;
+    string lastName;
+    string phoneNumber;
+    string email;
+    string banStatus = "false";  
+    string notes;
+
+    public void AddClient()
+    {
+        using (SqlConnection connect = new SqlConnection(DATACONNECTION))
+        {
+            connect.Open();
+
+            try
+            {
+                ValidateClient();  // Validate the user input
+
+                string sql = "INSERT INTO Customer (CustomerId, FirstName, LastName, PhoneNumber, Email, BanStatus, Notes) " +
+                             "VALUES (@CustomerId, @FirstName, @LastName, @PhoneNumber, @Email, @BanStatus, @Notes)";
+
+                using (SqlCommand cmd = new SqlCommand(sql, connect))
+                {
+                    cmd.Parameters.AddWithValue("@CustomerId", int.Parse(customerId));
+                    cmd.Parameters.AddWithValue("@FirstName", firstName);
+                    cmd.Parameters.AddWithValue("@LastName", lastName);
+                    cmd.Parameters.AddWithValue("@PhoneNumber", phoneNumber);
+                    cmd.Parameters.AddWithValue("@Email", email);
+                    cmd.Parameters.AddWithValue("@BanStatus", bool.Parse(banStatus));
+                    cmd.Parameters.AddWithValue("@Notes", string.IsNullOrWhiteSpace(notes) ? DBNull.Value : notes);
+
+                    cmd.ExecuteNonQuery();
+                    Application.Current.MainPage.DisplayAlert("Success", "Customer added successfully.", "OK");
+                }
+            }
+            catch (Exception e)
+            {
+                Application.Current.MainPage.DisplayAlert("Error", e.Message, "OK");
+            }
+        }
+    }
+
+    public void ValidateClient()
+    {
+        // Check if Client ID is a valid integer
+        if (!int.TryParse(customerId, out _))
+        {
+            throw new ArgumentException("Customer ID is invalid.");
+        }
+
+        // Check if First Name is provided
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            throw new ArgumentException("First Name cannot be empty.");
+        }
+
+        // Check if Last Name is provided
+        if (string.IsNullOrWhiteSpace(lastName))
+        {
+            throw new ArgumentException("Last Name cannot be empty.");
+        }
+
+        // Check if Phone Number is provided
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            throw new ArgumentException("Phone Number cannot be empty.");
+        }
+
+        // Check if Email is provided and valid
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
+        {
+            throw new ArgumentException("A valid Email Address is required.");
+        }
+    }
+}
