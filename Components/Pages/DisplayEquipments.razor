@@ -47,7 +47,7 @@ else if (equipmentList != null && !equipmentList.Any())
 
 
 @code {
-    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    string DATACONNECTION = App.DATABASESTRING;
     List<Equipment> equipmentList;
 
     public void LoadEquipment()

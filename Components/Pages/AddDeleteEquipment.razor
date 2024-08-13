@@ -52,7 +52,7 @@
 <br />
 
 @code {
-    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    string DATACONNECTION = App.DATABASESTRING;
     public Equipment equipment = new Equipment();
     string equipmentId1;
     string category;

@@ -45,7 +45,7 @@ else if (customerList != null && !customerList.Any())
 
 
 @code {
-    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    string DATACONNECTION = App.DATABASESTRING;
     List<Customer> customerList;
 
     public void LoadClients()

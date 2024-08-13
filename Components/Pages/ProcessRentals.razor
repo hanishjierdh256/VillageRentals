@@ -43,7 +43,7 @@ else if (errorMessage != null)
 }
 
 @code {
-    string DATACONNECTION = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Village_Rentals;Integrated Security=True";
+    string DATACONNECTION = App.DATABASESTRING;
     RentalEquipment rentalEquipment = new RentalEquipment();
     string successMessage = null;
     string errorMessage = null;
